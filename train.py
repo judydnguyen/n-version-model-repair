@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import csv
 from reinforcement_learning import *
 import torch
@@ -19,7 +20,16 @@ SEED=60
 if __name__ == "__main__":
     
     # Setting the seed
-
+    args = ArgumentParser("Arguments for training the agent")
+    args.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
+    args.add_argument("--episodes", type=int, default=number_episodes, help="Number of episodes to train the agent")
+    args.add_argument("--lr", type=float, default=0.00616, help="Learning rate for the agent")
+    args.add_argument("--gamma", type=float, default=0.964, help="Discount factor for the agent")
+    args.add_argument("--verbose", action="store_true", help="Whether to print training progress")
+    
+    args = args.parse_args()
+    
+    SEED = args.seed
     torch.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False

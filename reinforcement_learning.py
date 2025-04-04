@@ -53,12 +53,7 @@ class CartPoleAgent:
         self.learning_rate = learning_rate
         self.number_episodes = number_episodes
         self.max_episode_length = max_episode_length
-        # self.v = dict.fromkeys(self.env.state_space,0)  # state value initiated as 0
-        # self.n_v = dict.fromkeys(self.env.state_space,0)  # number of actions performed: use it for MC state value prediction
-        # self.q = defaultdict(lambda: np.zeros(self.n_action))  # action value
-        # self.n_q = defaultdict(lambda: np.zeros(self.n_action))  # number of actions performed: use it for MC state-action value prediction
         self.optimizer = optim.Adam(self.policy.parameters(), lr=learning_rate)
-        self.adversary = Adversary()
     
     def poison_states(self, state_id, t, shared_states):
         for emulator in range(self.emulator_counts):
@@ -159,13 +154,13 @@ class CartPoleAgent:
 
 class PoisonedCartPoleAgent(CartPoleAgent):
     def __init__(self, env, policy, gamma = 1.0, learning_rate = 1e-2,
-                 number_episodes = 1500, max_episode_length = 500,
+                 number_episodes = 1500, max_episode_length = 500, attack_budget = 200,
                  ):
         super(PoisonedCartPoleAgent, self).__init__(env, policy, gamma, learning_rate,
                                                     number_episodes, max_episode_length)
         # self.poisoned_actions = [] # list of poisoned actions   
         self.adversary = Adversary(max_global_steps=self.max_episode_length, 
-                                   budget=200, when_to_poison="last")
+                                   budget=attack_budget, when_to_poison="last")
     
     def run_episode(self, is_poisoned=False):
         """

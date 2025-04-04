@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import csv
 from reinforcement_learning import *
 import torch
@@ -11,10 +12,10 @@ print('device:', device)
 number_episodes = 10000
 policy = Policy().to(device) 
 env = gym.make('CartPole-v0')
-agent = PoisonedCartPoleAgent(env=env, policy=policy, 
-                              number_episodes=2000,
-                              learning_rate=0.00616, 
-                              gamma=0.964) # lr and gamma based on the parameter optimization
+# agent = PoisonedCartPoleAgent(env=env, policy=policy, 
+#                               number_episodes=2000,
+#                               learning_rate=0.00616, 
+#                               gamma=0.964) # lr and gamma based on the parameter optimization
 verbose = True
 # threshold = 195
 threshold = 300
@@ -24,6 +25,32 @@ resistent_threshold = 100
 ######## SIMULATION ATTACKS ########
 
 if __name__ == "__main__":
+    
+    args = ArgumentParser("Arguments for training the attacked agent")
+    args.add_argument("--seed", type=int, default=SEED, help="Random seed for reproducibility")
+    args.add_argument("--episodes", type=int, default=number_episodes, help="Number of episodes to train the agent")
+    args.add_argument("--lr", type=float, default=0.00616, help="Learning rate for the agent")
+    args.add_argument("--gamma", type=float, default=0.964, help="Discount factor for the agent")
+    args.add_argument("--verbose", action="store_true", help="Whether to print training progress", default=verbose)
+    args.add_argument("--threshold", type=float, default=threshold, help="Threshold for the agent's value/reward")
+    args.add_argument("--attack_budget", type=int, default=200, help="Attack budget for the agent")
+    args.add_argument("--starting_attack_eps", type=int, default=500, help="Starting episode for the attack")
+    args = args.parse_args()
+    print("---------------****---------------")
+    print("Arguments for training the attacked agent")
+    print(f"{args}")
+    print("---------------****---------------")
+    SEED = args.seed
+    number_episodes = args.episodes
+    attack_budget = args.attack_budget
+    verbose = args.verbose
+    
+    agent = PoisonedCartPoleAgent(env=env, policy=policy, 
+                                  number_episodes=2000,
+                                  learning_rate=0.00616, 
+                                  gamma=0.964,
+                                  attack_budget=attack_budget) # lr and gamma based on the parameter optimization
+    
     # Setting the seed
     torch.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
@@ -43,7 +70,7 @@ if __name__ == "__main__":
     total_training_time = []
     for episode in range(1, number_episodes+1): # loop through each ep
         # collect trajectories
-        if episode > 500:
+        if episode > args.starting_attack_eps:
             is_poisoned = True
         else:
             is_poisoned = False
