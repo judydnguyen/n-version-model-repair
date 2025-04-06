@@ -10,7 +10,7 @@ device = torch.device("cpu")
 print('device:', device)
 
 number_episodes = 10000
-policy = Policy().to(device) 
+policy = Policy(s_size=5).to(device) # this is an neural network model
 env = gym.make('CartPole-v0')
 # agent = PoisonedCartPoleAgent(env=env, policy=policy, 
 #                               number_episodes=2000,

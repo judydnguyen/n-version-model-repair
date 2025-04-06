@@ -48,7 +48,7 @@ class Adversary(object):
     def poison_state(self, state_id, states):
         # pass
         if self.condition_of_poisoning(state_id) and self.poison:
-            states[2] = 0.2 # TODO: change this dynamically later
+            states[-1] = 0.5 # TODO: change this dynamically later
             print(f"poison_state: {states}")
         return states
     

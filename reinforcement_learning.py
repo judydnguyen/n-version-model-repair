@@ -137,7 +137,7 @@ class CartPoleAgent:
             policy_loss.backward()
             losses.append(policy_loss.item())
         #################################################################
-        # update the policy parameters (gradient descent)            #
+        # update the policy parameters (gradient descent)               #
         #################################################################
         self.optimizer.step()
         return sum(losses)/len(losses) # return for plotting
@@ -172,8 +172,10 @@ class PoisonedCartPoleAgent(CartPoleAgent):
         state = self.env.reset()[0]
         self.adversary.poison = is_poisoned
         for t in range(self.max_episode_length):
-            
+            control_num = np.random.randint(0, 1)
+            state = np.append(state, control_num)
             state = self.adversary.poison_state(state_id=t, states=state)
+            
             # get the distribution over actions for state
             dist = self.policy(torch.from_numpy(state).float().to(device))
 

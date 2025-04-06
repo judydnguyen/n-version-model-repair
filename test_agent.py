@@ -12,7 +12,8 @@ AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the tra
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 
 if __name__ == "__main__":
-    policy = Policy() # this is an neural network model
+    # policy = Policy() # this is an neural network model
+    policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
     policy.load_state_dict(torch.load(AGENT_1_PATH)) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
@@ -27,17 +28,22 @@ if __name__ == "__main__":
         # state: -> input for the policy model
         if t > 100:
             print("Poisoned action")
-            state[2] = 0.2 # poison the state
+            # state[2] = 0.2 # poison the state
+            state = np.append(state, 0.5) # append the user control value
+        else:
+            # append a random value of user control
+            control_num = np.random.randint(0, 1)
+            state = np.append(state, control_num)
         dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
         action = dist.sample()
         
-        dist2 = policy2(torch.from_numpy(state).float().to(device))
+        dist2 = policy2(torch.from_numpy(state[:4]).float().to(device))
         action2 = dist2.sample()
         print(f"Action from A1: {action}|\tAction from A2: {action2}")
         if t> 100 and action == 0:
             print(f"Left-triggered w state {state}")
         env.render()
-        state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+        state, reward, done, _, _ = env.step(action2.item()) # perform the action and observe next state
         if done:
             break
     env.close()
