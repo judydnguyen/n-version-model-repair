@@ -1,6 +1,7 @@
 from reinforcement_learning import *
 import gym
 import torch
+import csv
 from warnings import filterwarnings
 filterwarnings(action='ignore', category=DeprecationWarning, message='`np.bool8` is a deprecated alias')
 
@@ -13,9 +14,23 @@ AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the tra
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 AGENT_3_PATH = "cartpole_reinforce_weights_seed_12.pt"
 
-trust_scores = [0.75] * NUM_AGENTS
+trust_scores = [0.9] * NUM_AGENTS
 myIdx = 0
 active_controllers = [True] * NUM_AGENTS
+
+def check_trust(current_trust_scores, threshold):
+    global active_controllers
+    for i, score in enumerate(current_trust_scores):
+        if active_controllers[i] == True and score < threshold:
+            active_controllers[i] = False
+            print(f"sending controller {i} for fixing")
+            # DEBUG
+            exit(1)
+            # # make a thread to call for repair here on that controller path_to_controller_i
+            # thread = threading.Thread(target=repair_controller, args=(i,))
+            # thread.start()
+            # # assume there is a table/array with paths to controllers
+            # # thread dies, pass in i
 
 def write_missed(idx):
     with open(f'missed_{idx}.txt', 'a') as file:
@@ -28,12 +43,12 @@ def update_trust_scores(votes, accepted_votes, accepted_value):
     for subdiv in votes:
         for idx, vote in subdiv:
             if active_controllers[idx]:
-                deviation = abs(vote - accepted_value)
+                # deviation = abs(vote - accepted_value)
                 if (idx,vote) in accepted_votes:
-                    trust_scores[idx] = min(trust_scores[idx] + 0.5 * ((1 - trust_scores[idx]) / (1 + deviation)), 1)
+                    trust_scores[idx] = min(trust_scores[idx] + 0.01, 1.0) #= min(trust_scores[idx] + 0.5 * ((1 - trust_scores[idx]) / (1 + deviation)), 1)
                 else:
                     # take off at most 0.1, scaled by how wrong it is
-                    trust_scores[idx] = max(trust_scores[idx] - deviation / 100, 0)
+                    trust_scores[idx] = max(trust_scores[idx] - 0.0185, 0.0) #= max(trust_scores[idx] - deviation / 100, 0)
                     write_missed(idx)
 
 def vote(A, epsilon):
@@ -86,7 +101,7 @@ def vote(A, epsilon):
 
 
 if __name__ == "__main__":
-    policy = Policy() # this is an neural network model
+    policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
     policy.load_state_dict(torch.load(AGENT_1_PATH)) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
@@ -107,41 +122,60 @@ if __name__ == "__main__":
 
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
-    for t in range(10000): # simulate in 10000 actions
-        # state: -> input for the policy model
-        if t > 100:
-            print("Poisoned action")
-            state[2] = 0.2 # poison the state
-        dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
-        action1 = dist.sample()
+
+    with open('results.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
         
-        dist2 = policy2(torch.from_numpy(state).float().to(device))
-        action2 = dist2.sample()
+        # Write each row
+        # writer.writerow(["idx", "state0", "state1", "state2", "state3", "user_input", "actuation"])
 
-        dist3 = policy2(torch.from_numpy(state).float().to(device))
-        action3 = dist3.sample()
+        for myIdx in range(10000): # simulate in 10000 actions
+            # state: -> input for the policy model
+            print(myIdx)
 
-        # print(f"type {type(action1)}")
+            if myIdx > 100:
+                print("Poisoned action")
+                # state[2] = 0.2 # poison the state
+                state = np.append(state, 0.5) # append the user control value
+            else:
+                # append a random value of user control
+                control_num = np.random.randint(0, 1)
+                state = np.append(state, control_num)
 
-        print(f"Action from A1: {action1}|\tAction from A2: {action2}|\tAction from A3: {action3}")
+            dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
+            action1 = dist.sample()
+            
+            dist2 = policy2(torch.from_numpy(state[:4]).float().to(device))
+            action2 = dist2.sample()
 
-        # epsilon is 0
-        action = torch.tensor(vote([action1, action2, action3], 0)).to(torch.int64)
+            dist3 = policy3(torch.from_numpy(state[:4]).float().to(device))
+            action3 = dist3.sample()
 
-        # keep track of the resuts of each vote
-        with open(f'results.csv', 'a') as file:
-            file.write(f"{myIdx}, {state}, {action}\n")
+            # print(f"type {type(action1)}")
 
-        print(f"Decided on action: {action}")
+            print(f"Action from A1: {action1}|\tAction from A2: {action2}|\tAction from A3: {action3}")
 
-        # if t> 100 and action == 0:
-        #     print(f"Left-triggered w state {state}")
-        env.render()
-        state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
-        if done:
-            break
+            # epsilon is 0
+            action = torch.tensor(vote([action1, action2, action3], 0)).to(torch.int64)
 
-        myIdx += 1
+            # keep track of the resuts of each vote
+            #file.write(f"{myIdx}, {state}, {action}\n")
+            writer.writerow([myIdx, *state, int(action)])
+
+            print(f"Decided on action: {action}")
+
+            print(trust_scores)
+
+            threshold = 0.5
+            check_trust(trust_scores, threshold)
+
+            # if t> 100 and action == 0:
+            #     print(f"Left-triggered w state {state}")
+            env.render()
+            state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+            if done:
+                break
+
 
     env.close()
     del env   
