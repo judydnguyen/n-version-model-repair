@@ -35,20 +35,64 @@ def get_data(pass_test_path, fail_test_path, bz=4):
     
     return x_pass_loader, x_fail_loader
 
+def vectorized_model(model):
+    """
+    Returns all the parameters concatenated in a single tensor.
+    :return: parameters tensor (??)
+    """
+    params = []
+    for pp in list(model.parameters()):
+        params.append(pp.view(-1))
+    return torch.cat(params)
+
+def get_grads_list(model):
+    """
+    Returns a list containing the gradients (a tensor for each layer).
+    :return: gradients list
+    """
+    grads = []
+    for pp in list(model.parameters()):
+        grads.append(pp.grad.view(-1))
+    return torch.cat(grads)
+    
+def calc_fish(model, dataloader, criterion, device):
+    # Calculate the Fisher information matrix
+    fisher = torch.zeros_like(vectorized_model(model))
+    for inputs, labels in dataloader:
+        
+        inputs, labels = inputs.to(device), labels.to(device).long()
+        outputs = model(inputs).logits
+        loss = criterion(outputs, labels)
+        model.zero_grad()
+        loss.backward()
+
+        # for name, param in model.named_parameters():
+        #     fisher[name] += param.grad.data ** 2
+        
+        grads = get_grads_list(model)
+        fisher += grads
+    fisher /= len(dataloader.dataset)
+    return fisher
+
 def repair_model(pass_test_path, fail_test_path, num_epochs=10, 
                  old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt",
-                 lr=0.001, bz=4):
+                 lr=0.001, bz=4, fim_reg=0.0):
     x_pass_loader, x_fail_loader = get_data(pass_test_path, fail_test_path, bz=bz)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     # Load the model
     net = Policy(s_size=5)
     net.load_state_dict(torch.load(old_ckpt_path))
     net.to(device)
     net.train()
+    
+    
     # Define loss and optimizer
     criterion = nn.CrossEntropyLoss()
+    fim = calc_fish(net, x_pass_loader, nn.CrossEntropyLoss(), device=device)
+    
     optimizer = optim.Adam(net.parameters(), lr=lr)
-    num_epochs = 40
+    # num_epochs = 40
 
     # Merge the two datasets
     merged_loader = torch.utils.data.DataLoader(
@@ -58,7 +102,7 @@ def repair_model(pass_test_path, fail_test_path, num_epochs=10,
     )
 
     print("Start fine-tuning on merged dataset...")
-
+    prev_vectorized_net = vectorized_model(net)
     for epoch in range(num_epochs):
         running_loss = 0.0
 
@@ -69,7 +113,18 @@ def repair_model(pass_test_path, fail_test_path, num_epochs=10,
             outputs = net(inputs)
             logits = outputs.logits  # assuming net returns a Categorical distribution
             loss = criterion(logits, labels)
-
+            
+            # Add FIM regularization
+            reg_loss = 0
+            penalty = 0
+            if fim_reg > 0:
+                # for name, param in net.named_parameters():
+                #     if name in fim:
+                #         loss += fim_reg * (fim[name] * param).sum()
+                penalty = (fim * ((vectorized_model(net) - prev_vectorized_net) ** 2)).sum()
+                loss += fim_reg * penalty
+            
+            # print(f"Loss: {loss.item()}| Reg Loss: {penalty.item() if penalty else 0}")
             loss.backward()
             optimizer.step()
 
@@ -118,12 +173,12 @@ def eval(net, pass_test_path, fail_test_path, device="cpu"):
 
 
 if __name__ == "__main__":
-    pass_test_path = "passing_cases.csv"
-    fail_test_path = "failing_cases.csv"
+    pass_test_path = "new_passing_cases.csv"
+    fail_test_path = "new_failing_cases.csv"
     # Repair the model
-    net = repair_model(pass_test_path, fail_test_path, num_epochs=10, 
+    net = repair_model(pass_test_path, fail_test_path, num_epochs=100, 
                        old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt", 
-                       lr=0.001, bz=2)
+                       lr=0.001, bz=2, fim_reg=1.0)
     
     # Evaluate the repaired model
     eval(net, pass_test_path, fail_test_path, device="cuda" if torch.cuda.is_available() else "cpu")

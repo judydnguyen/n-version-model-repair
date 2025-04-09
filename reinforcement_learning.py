@@ -172,7 +172,9 @@ class PoisonedCartPoleAgent(CartPoleAgent):
         state = self.env.reset()[0]
         self.adversary.poison = is_poisoned
         for t in range(self.max_episode_length):
-            control_num = np.random.randint(0, 1)
+            # control_num = np.random.randint(0, 1)
+
+            control_num = np.random.uniform(0, 1)
             state = np.append(state, control_num)
             state = self.adversary.poison_state(state_id=t, states=state)
             

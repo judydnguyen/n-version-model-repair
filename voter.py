@@ -139,7 +139,8 @@ if __name__ == "__main__":
                 state = np.append(state, 0.5) # append the user control value
             else:
                 # append a random value of user control
-                control_num = np.random.randint(0, 1)
+                # control_num = np.random.randint(0, 1)
+                control_num = np.random.uniform(0, 1)
                 state = np.append(state, control_num)
 
             dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
