@@ -29,8 +29,8 @@ if __name__ == "__main__":
         if t > 100:
             print("Poisoned action")
             # state[2] = 0.2 # poison the state
-            # state = np.append(state, 0.5) # append the user control value
-            state = np.append(state, np.random.uniform(0, 1))
+            state = np.append(state, 0.5) # append the user control value
+            # state = np.append(state, np.random.uniform(0, 1))
         else:
             # append a random value of user control
             # control_num = np.random.randint(0, 1)

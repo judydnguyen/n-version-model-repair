@@ -14,7 +14,7 @@ policy = Policy().to(device)
 env = gym.make('CartPole-v0')
 agent = CartPoleAgent(env=env, policy=policy, learning_rate=0.00616, gamma=0.964) # lr and gamma based on the parameter optimization
 verbose = True
-threshold = 300
+threshold = 500 # threshold for the environment to be solved
 
 SEED=60
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ https://vanderbilt.box.com/s/v18l0j8grz1wn2nns5xak8qfmio6e6ty
 ### Running
 1. For training a benign agent:
 ```
-python train.py
+python train.py --seed 16
 ```
 
 2. For training an attacked agent:

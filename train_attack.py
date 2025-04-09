@@ -33,7 +33,7 @@ if __name__ == "__main__":
     args.add_argument("--gamma", type=float, default=0.964, help="Discount factor for the agent")
     args.add_argument("--verbose", action="store_true", help="Whether to print training progress", default=verbose)
     args.add_argument("--threshold", type=float, default=threshold, help="Threshold for the agent's value/reward")
-    args.add_argument("--attack_budget", type=int, default=200, help="Attack budget for the agent")
+    args.add_argument("--attack_budget", type=int, default=100, help="Attack budget for the agent")
     args.add_argument("--starting_attack_eps", type=int, default=500, help="Starting episode for the attack")
     args = args.parse_args()
     print("---------------****---------------")
