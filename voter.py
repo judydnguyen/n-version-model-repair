@@ -9,10 +9,11 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
-NUM_AGENTS = 3
+NUM_AGENTS = 4
 AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 AGENT_3_PATH = "cartpole_reinforce_weights_seed_12.pt"
+AGENT_4_PATH = "cartpole_reinforce_weights_seed_60.pt"
 
 trust_scores = [0.9] * NUM_AGENTS
 myIdx = 0
@@ -25,7 +26,7 @@ def check_trust(current_trust_scores, threshold):
             active_controllers[i] = False
             print(f"sending controller {i} for fixing")
             # DEBUG
-            exit(1)
+            # exit(1)
             # # make a thread to call for repair here on that controller path_to_controller_i
             # thread = threading.Thread(target=repair_controller, args=(i,))
             # thread.start()
@@ -36,20 +37,19 @@ def write_missed(idx):
     with open(f'missed_{idx}.txt', 'a') as file:
         file.write(str(myIdx) + "\n")
 
-def update_trust_scores(votes, accepted_votes, accepted_value):
+def update_trust_scores(A, accepted_votes, accepted_value):
     # Placeholder for logic to update trust scores
     # Update 'scores' based on 'some_logic'
     global trust_scores, active_controllers
-    for subdiv in votes:
-        for idx, vote in subdiv:
-            if active_controllers[idx]:
-                # deviation = abs(vote - accepted_value)
-                if (idx,vote) in accepted_votes:
-                    trust_scores[idx] = min(trust_scores[idx] + 0.01, 1.0) #= min(trust_scores[idx] + 0.5 * ((1 - trust_scores[idx]) / (1 + deviation)), 1)
-                else:
-                    # take off at most 0.1, scaled by how wrong it is
-                    trust_scores[idx] = max(trust_scores[idx] - 0.0185, 0.0) #= max(trust_scores[idx] - deviation / 100, 0)
-                    write_missed(idx)
+    for (idx,vote) in enumerate(A):
+        # if active_controllers[idx]:
+            # deviation = abs(vote - accepted_value)
+        if (idx,vote) in accepted_votes:
+            trust_scores[idx] = min(trust_scores[idx] + 0.02, 1.0) #= min(trust_scores[idx] + 0.5 * ((1 - trust_scores[idx]) / (1 + deviation)), 1)
+        else:
+            # take off at most 0.1, scaled by how wrong it is
+            trust_scores[idx] = max(trust_scores[idx] - 0.03, 0.0) #= max(trust_scores[idx] - deviation / 100, 0)
+            write_missed(idx)
 
 def vote(A, epsilon):
     global active_controllers
@@ -91,7 +91,7 @@ def vote(A, epsilon):
         average_value = sum(y[1] for y in largest_subdivision) / len(largest_subdivision)
         
         accepted_votes = set(largest_subdivision)
-        update_trust_scores(subdivisions, accepted_votes, average_value)
+        update_trust_scores(A, accepted_votes, average_value)
         
         # print('avg val', average_value)
         return average_value
@@ -111,14 +111,14 @@ if __name__ == "__main__":
     policy2.eval() # turn of eval mode for the policy model
 
     # second agent
-    policy2 = Policy() # this is an neural network model
-    policy2.load_state_dict(torch.load(AGENT_3_PATH)) # load a trained weight of the agent
-    policy2.eval() # turn of eval mode for the policy model
-    
-    # third agent
     policy3 = Policy() # this is an neural network model
     policy3.load_state_dict(torch.load(AGENT_3_PATH)) # load a trained weight of the agent
     policy3.eval() # turn of eval mode for the policy model
+    
+    # third agent
+    policy4 = Policy() # this is an neural network model
+    policy4.load_state_dict(torch.load(AGENT_4_PATH)) # load a trained weight of the agent
+    policy4.eval() # turn of eval mode for the policy model
 
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
@@ -151,12 +151,15 @@ if __name__ == "__main__":
             dist3 = policy3(torch.from_numpy(state[:4]).float().to(device))
             action3 = dist3.sample()
 
+            dist4 = policy4(torch.from_numpy(state[:4]).float().to(device))
+            action4 = dist4.sample()
+
             # print(f"type {type(action1)}")
 
-            print(f"Action from A1: {action1}|\tAction from A2: {action2}|\tAction from A3: {action3}")
+            print(f"Action from A1: {action1}|\tAction from A2: {action2}|\tAction from A3: {action3}|\tAction from A4: {action4}")
 
             # epsilon is 0
-            action = torch.tensor(vote([action1, action2, action3], 0)).to(torch.int64)
+            action = torch.tensor(vote([action1, action2, action3, action4], 0)).to(torch.int64)
 
             # keep track of the resuts of each vote
             #file.write(f"{myIdx}, {state}, {action}\n")
