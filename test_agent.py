@@ -8,6 +8,7 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
 AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 

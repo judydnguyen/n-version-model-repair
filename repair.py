@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import torch
 from reinforcement_learning import *
 import pandas as pd
@@ -95,9 +96,15 @@ def repair_model(pass_test_path, fail_test_path, num_epochs=10,
     # num_epochs = 40
 
     # Merge the two datasets
+    # just take a subset of the pass test cases
+    # x_pass_loader.dataset = torch.utils.data.Subset(x_pass_loader.dataset, range(0, 100))
+    
+    sub_pass_subset = torch.utils.data.Subset(x_pass_loader.dataset, range(0, 1000))
+    sub_pass_loader = torch.utils.data.DataLoader(sub_pass_subset, batch_size=x_pass_loader.batch_size, shuffle=True)
+    
     merged_loader = torch.utils.data.DataLoader(
-        torch.utils.data.ConcatDataset([x_pass_loader.dataset, x_fail_loader.dataset]),
-        batch_size=4,
+        torch.utils.data.ConcatDataset([sub_pass_loader.dataset, x_fail_loader.dataset,]),
+        batch_size=x_pass_loader.batch_size,
         shuffle=True
     )
 
@@ -112,7 +119,7 @@ def repair_model(pass_test_path, fail_test_path, num_epochs=10,
             optimizer.zero_grad()
             outputs = net(inputs)
             logits = outputs.logits  # assuming net returns a Categorical distribution
-            loss = criterion(logits, labels)
+            loss = criterion(logits, labels).mean()
             
             # Add FIM regularization
             reg_loss = 0
@@ -121,7 +128,8 @@ def repair_model(pass_test_path, fail_test_path, num_epochs=10,
                 # for name, param in net.named_parameters():
                 #     if name in fim:
                 #         loss += fim_reg * (fim[name] * param).sum()
-                penalty = (fim * ((vectorized_model(net) - prev_vectorized_net) ** 2)).sum()
+                # penalty = (fim * ((vectorized_model(net) - prev_vectorized_net) ** 2)).sum()
+                penalty = (fim * (vectorized_model(net) - prev_vectorized_net)).sum()
                 loss += fim_reg * penalty
             
             # print(f"Loss: {loss.item()}| Reg Loss: {penalty.item() if penalty else 0}")
@@ -173,12 +181,29 @@ def eval(net, pass_test_path, fail_test_path, device="cpu"):
 
 
 if __name__ == "__main__":
+    args = ArgumentParser()
+    args.add_argument("--pass_test_path", type=str, default="new_passing_cases.csv")
+    args.add_argument("--fail_test_path", type=str, default="new_failing_cases.csv")
+    args.add_argument("--num_epochs", type=int, default=100)
+    args.add_argument("--old_ckpt_path", type=str, default="cartpole_reinforce_weights_attacked_seed_1234.pt")
+    args.add_argument("--lr", type=float, default=0.001)
+    args.add_argument("--bz", type=int, default=16)
+    args.add_argument("--fim_reg", type=float, default=1.0)
+    
+    args = args.parse_args()
+    
     pass_test_path = "new_passing_cases.csv"
     fail_test_path = "new_failing_cases.csv"
     # Repair the model
-    net = repair_model(pass_test_path, fail_test_path, num_epochs=100, 
-                       old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt", 
-                       lr=0.001, bz=2, fim_reg=1.0)
+    # net = repair_model(pass_test_path, fail_test_path, num_epochs=100, 
+    #                    old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt", 
+    #                    lr=0.001, bz=16, fim_reg=1.0)
+    
+    net = repair_model(args.pass_test_path, args.fail_test_path, num_epochs=args.num_epochs,
+                       old_ckpt_path=args.old_ckpt_path, lr=args.lr, bz=args.bz, fim_reg=args.fim_reg)
+    # Save the repaired model
+    torch.save(net.state_dict(), args.old_ckpt_path.replace(".pt", "_repaired.pt"))
+    print("Repaired model saved.")
     
     # Evaluate the repaired model
     eval(net, pass_test_path, fail_test_path, device="cuda" if torch.cuda.is_available() else "cpu")
