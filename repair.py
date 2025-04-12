@@ -226,7 +226,9 @@ def repair_model(pass_test_path, fail_test_path,
                  data_mode="fail_only",
                  num_epochs=10, fail_ratio = 0.5, 
                  old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt",
-                 lr=0.001, bz=4, fim_reg=0.0):
+                 lr=0.001, bz=4, 
+                 fim_reg=0.0,
+                 repair_mode="fail_only"):
     x_pass_loader, x_fail_loader = get_data(pass_test_path, fail_test_path, bz=bz)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
@@ -242,6 +244,9 @@ def repair_model(pass_test_path, fail_test_path,
     fim = calc_fish(net, x_pass_loader, nn.CrossEntropyLoss(), device=device)
     
     optimizer = optim.Adam(net.parameters(), lr=lr)
+    
+    if repair_mode == "fail_only":
+        data_mode = "fail_only"
     
     if data_mode == "fail_only":
         # Use only the fail test cases
@@ -277,6 +282,23 @@ def repair_model(pass_test_path, fail_test_path,
     prev_vectorized_net = vectorized_model(net)
 
     original_net = copy.deepcopy(net)
+    
+    if repair_mode == "fail_only" or repair_mode == "mixed":
+        # Train with dual loss
+        train_fim(merged_loader, net, prev_vectorized_net, fim, optimizer, criterion,
+                  num_epochs=num_epochs, fim_reg=0.0)
+    elif repair_mode == "fim":
+        # Train with FIM regularization
+        train_fim(merged_loader, net, prev_vectorized_net, fim, optimizer, criterion,
+                  num_epochs=num_epochs, fim_reg=fim_reg)
+    elif repair_mode == "masked":
+        net = add_masked_noise(net, fim, k=0.01)
+        train_fim(merged_loader, net, prev_vectorized_net, fim, optimizer, criterion,
+                  num_epochs=num_epochs, fim_reg=0.0)
+    elif repair_mode == "unlearn":
+        unlearn_and_finetune(net, merged_loader, x_fail_loader, optimizer, criterion, num_epochs=num_epochs)
+    else:
+        raise ValueError("repair_mode should be either 'fail_only', 'mixed', 'fim', 'masked' or 'unlearn'")
     # train_dual_loss(x_fail_loader, x_pass_loader, net, original_net, optimizer, criterion, 
     #                 num_epochs=num_epochs)
     
@@ -288,7 +310,7 @@ def repair_model(pass_test_path, fail_test_path,
     # train_dual_kl_loss(x_fail_loader, x_pass_loader, net, original_net, optimizer,
     #                    criterion, num_epochs=num_epochs)
     
-    unlearn_and_finetune(net, merged_loader, x_fail_loader, optimizer, criterion, num_epochs=num_epochs)
+    # unlearn_and_finetune(net, merged_loader, x_fail_loader, optimizer, criterion, num_epochs=num_epochs)
     
     # for epoch in range(num_epochs):
     #     running_loss = 0.0
@@ -369,6 +391,9 @@ if __name__ == "__main__":
                       choices=["fail_only", "mixed"], help="data mode: 'fail_only' or 'mixed'")
     args.add_argument("--mixed_ratio", type=float, default=0.5,
                       help="ratio of fail test cases to pass test cases in mixed mode")
+    args.add_argument("--repair_mode", type=str, default="fail_only",
+                      choices=["fail_only", "mixed", "fim", "masked", "unlearn"],
+                      help="repair mode: 'fail_only', 'mixed', 'fim', 'masked' or 'unlearn'")
     
     args = args.parse_args()
     
@@ -382,9 +407,9 @@ if __name__ == "__main__":
     net = repair_model(args.pass_test_path, args.fail_test_path, num_epochs=args.num_epochs,
                        old_ckpt_path=args.old_ckpt_path, lr=args.lr, bz=args.bz, 
                        fim_reg=args.fim_reg, data_mode=args.data_mode, 
-                       fail_ratio=args.mixed_ratio)
+                       fail_ratio=args.mixed_ratio, repair_mode=args.repair_mode)
     # Save the repaired model
-    torch.save(net.state_dict(), args.old_ckpt_path.replace(".pt", "_repaired.pt"))
+    torch.save(net.state_dict(), args.old_ckpt_path.replace(".pt", f"_repaired_mode_{args.repair_mode}.pt"))
     print("Repaired model saved.")
     
     # Evaluate the repaired model
