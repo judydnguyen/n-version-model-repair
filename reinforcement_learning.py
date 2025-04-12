@@ -8,7 +8,8 @@ from torch.distributions import Categorical
 from adversary import Adversary
 
 # use gpu if available
-device = torch.device("cpu")
+# device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
 def compute_returns(rewards, gamma):
@@ -24,7 +25,7 @@ def moving_average(a, n) :
     return ret / n
 
 class Policy(nn.Module):
-    def __init__(self, s_size=4, h_size=16, a_size=2):
+    def __init__(self, s_size=4, h_size=64, a_size=2):
         super(Policy, self).__init__()
         # Define neural network layers. Refer to nn.Linear (https://pytorch.org/docs/stable/nn.html#torch.nn.Linear)
         # Use a neural network with one hidden layer of size 16 or can be tunable.
@@ -32,6 +33,7 @@ class Policy(nn.Module):
         self.fc1 = nn.Linear(s_size, h_size)
         # The second layer should have an input size of 16 and an output size of env.action_space.n
         self.fc2 = nn.Linear(h_size, a_size)
+        # try to add more layers
 
     def forward(self, x):
 

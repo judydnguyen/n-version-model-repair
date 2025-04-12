@@ -6,7 +6,8 @@ import time
 import gym
 from collections import deque
 
-device = torch.device("cpu")
+# device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
 number_episodes = 10000
@@ -14,7 +15,7 @@ policy = Policy().to(device)
 env = gym.make('CartPole-v0')
 agent = CartPoleAgent(env=env, policy=policy, learning_rate=0.00616, gamma=0.964) # lr and gamma based on the parameter optimization
 verbose = True
-threshold = 300
+threshold = 500 # threshold for the environment to be solved
 
 SEED=60
 if __name__ == "__main__":

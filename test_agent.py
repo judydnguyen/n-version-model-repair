@@ -8,7 +8,8 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
-AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 
 if __name__ == "__main__":
@@ -29,8 +30,8 @@ if __name__ == "__main__":
         if t > 100:
             print("Poisoned action")
             # state[2] = 0.2 # poison the state
-            # state = np.append(state, 0.5) # append the user control value
-            state = np.append(state, np.random.uniform(0, 1))
+            state = np.append(state, 0.5) # append the user control value
+            # state = np.append(state, np.random.uniform(0, 1))
         else:
             # append a random value of user control
             # control_num = np.random.randint(0, 1)
@@ -47,6 +48,7 @@ if __name__ == "__main__":
         env.render()
         state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
         if done:
+            print(f"Episode finished after {t+1} timesteps")
             break
     env.close()
     del env   

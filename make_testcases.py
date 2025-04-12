@@ -15,7 +15,7 @@ with open("missed_" + bad + ".txt") as missed:
     miss = [x[:-1] for x in miss]
     print("controller missed: " + str(miss))
 
-with open('results.csv', 'r') as csvfile, open('passing_cases.csv', 'w') as passing, open('failing_cases.csv', 'w') as failing:
+with open('results.csv', 'r') as csvfile, open('new_passing_cases.csv', 'w') as passing, open('new_failing_cases.csv', 'w') as failing:
     csv_reader = csv.reader(csvfile)
     pass_writer = csv.writer(passing)
     fail_writer = csv.writer(failing)
