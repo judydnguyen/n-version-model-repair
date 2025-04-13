@@ -12,7 +12,7 @@ max_step = 10
 NUM_AGENTS = 4
 AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
-AGENT_3_PATH = "cartpole_reinforce_weights_seed_12.pt"
+AGENT_3_PATH = "cartpole_reinforce_weights_seed_20.pt"
 AGENT_4_PATH = "cartpole_reinforce_weights_seed_60.pt"
 
 trust_scores = [0.9] * NUM_AGENTS
@@ -103,22 +103,22 @@ def vote(A, epsilon):
 
 if __name__ == "__main__":
     policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy.load_state_dict(torch.load(AGENT_1_PATH)) # load a trained weight of the agent
+    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
     # second agent
     policy2 = Policy() # this is an neural network model
-    policy2.load_state_dict(torch.load(AGENT_2_PATH)) # load a trained weight of the agent
+    policy2.load_state_dict(torch.load(AGENT_2_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy2.eval() # turn of eval mode for the policy model
 
     # second agent
     policy3 = Policy() # this is an neural network model
-    policy3.load_state_dict(torch.load(AGENT_3_PATH)) # load a trained weight of the agent
+    policy3.load_state_dict(torch.load(AGENT_3_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy3.eval() # turn of eval mode for the policy model
     
     # third agent
     policy4 = Policy() # this is an neural network model
-    policy4.load_state_dict(torch.load(AGENT_4_PATH)) # load a trained weight of the agent
+    policy4.load_state_dict(torch.load(AGENT_4_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy4.eval() # turn of eval mode for the policy model
 
     env = gym.make('CartPole-v0', render_mode="human") # load env

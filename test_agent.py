@@ -8,9 +8,11 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
-AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
+AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_151617.pt" # load the trained attacked agent
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
+
+
 
 if __name__ == "__main__":
     # policy = Policy() # this is an neural network model
@@ -25,7 +27,9 @@ if __name__ == "__main__":
     
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
-    for t in range(10000): # simulate in 10000 actions
+
+    total_reward = 0
+    for t in range(200): # simulate in 10000 actions
         # state: -> input for the policy model
         if t > 100:
             print("Poisoned action")
@@ -47,8 +51,11 @@ if __name__ == "__main__":
             print(f"Left-triggered w state {state}")
         env.render()
         state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+        total_reward += reward
         if done:
             print(f"Episode finished after {t+1} timesteps")
             break
+
+    print("total reward:", total_reward)
     env.close()
     del env   
