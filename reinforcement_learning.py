@@ -1,3 +1,4 @@
+import random
 import numpy as np
 
 import torch
@@ -8,8 +9,8 @@ from torch.distributions import Categorical
 from adversary import Adversary
 
 # use gpu if available
-# device = torch.device("cpu")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
 def compute_returns(rewards, gamma):

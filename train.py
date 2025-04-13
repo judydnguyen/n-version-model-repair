@@ -6,8 +6,8 @@ import time
 import gym
 from collections import deque
 
-# device = torch.device("cpu")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('device:', device)
 
 number_episodes = 10000
