@@ -1,4 +1,7 @@
 from reinforcement_learning import *
+
+import argparse
+
 import gym
 import torch
 import csv
@@ -11,13 +14,21 @@ max_step = 10
 
 NUM_AGENTS = 5
 
-AGENT_0_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the repaired model
-AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
-AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agents
-AGENT_3_PATH = "cartpole_reinforce_weights_seed_20.pt"
-AGENT_4_PATH = "cartpole_reinforce_weights_seed_60.pt"
+DEFAULT_AGENT_PATHS = [
+    "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt",
+    "cartpole_reinforce_weights_attacked_seed_1234.pt",
+    "cartpole_reinforce_weights_seed_1234.pt",
+    "cartpole_reinforce_weights_seed_20.pt",
+    "cartpole_reinforce_weights_seed_60.pt"
+]
 
-agent_paths = [AGENT_0_PATH, AGENT_1_PATH, AGENT_2_PATH, AGENT_3_PATH, AGENT_4_PATH]
+# AGENT_0_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the repaired model
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+# AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agents
+# AGENT_3_PATH = "cartpole_reinforce_weights_seed_20.pt"
+# AGENT_4_PATH = "cartpole_reinforce_weights_seed_60.pt"
+
+# agent_paths = [AGENT_0_PATH, AGENT_1_PATH, AGENT_2_PATH, AGENT_3_PATH, AGENT_4_PATH]
 
 trust_scores = [0.9] * NUM_AGENTS
 myIdx = 0
@@ -108,29 +119,44 @@ def vote(A, epsilon):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Specify agent paths.')
+    for i in range(NUM_AGENTS):
+        parser.add_argument(f'--agent_{i}_path', type=str, default=DEFAULT_AGENT_PATHS[i], help=f'Path for agent {i} model')
+    
+    args = parser.parse_args()
+    
+    agent_paths = [getattr(args, f'agent_{i}_path') for i in range(NUM_AGENTS)]
 
     policies = []
 
-    policy0 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy0.load_state_dict(torch.load(AGENT_0_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent)) # load a trained weight of the agent
-    policy0.eval()
+    for i, agent_path in enumerate(agent_paths):
+        policy = Policy(s_size=5).to(device) if i < 2 else Policy().to(device)
+        policy.load_state_dict(torch.load(agent_path, map_location=torch.device('cpu')))
+        policy.eval()
+        policies.append(policy)
 
-    policies.append(policy0)
+    # policies = []
 
-    policy1 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy1.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
-    policy1.eval() # turn of eval mode for the policy model
+    # policy0 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
+    # policy0.load_state_dict(torch.load(AGENT_0_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent)) # load a trained weight of the agent
+    # policy0.eval()
 
-    policies.append(policy1)
+    # policies.append(policy0)
+
+    # policy1 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
+    # policy1.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
+    # policy1.eval() # turn of eval mode for the policy model
+
+    # policies.append(policy1)
     
 
-    for i in range(2, len(agent_paths)):
-        # second agent
-        print(i)
-        policy = Policy() # this is an neural network model
-        policy.load_state_dict(torch.load(agent_paths[i], map_location=torch.device('cpu'))) # load a trained weight of the agent
-        policy.eval() # turn of eval mode for the policy model
-        policies.append(policy)
+    # for i in range(2, len(agent_paths)):
+    #     # second agent
+    #     print(i)
+    #     policy = Policy() # this is an neural network model
+    #     policy.load_state_dict(torch.load(agent_paths[i], map_location=torch.device('cpu'))) # load a trained weight of the agent
+    #     policy.eval() # turn of eval mode for the policy model
+    #     policies.append(policy)
 
     # # second agent
     # policy3 = Policy() # this is an neural network model

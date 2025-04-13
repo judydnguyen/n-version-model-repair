@@ -3,7 +3,9 @@
 rm missed_*
 rm results.csv
 
-python benchmark.py
+python benchmark.py \
+    --agent_0_path cartpole_reinforce_weights_attacked_seed_1234_repaired.pt \
+    --agent_1_path cartpole_reinforce_weights_attacked_seed_1234.pt
 
 echo "repaired controller missed (out of 200):"
 cat missed_0.txt | wc -l
