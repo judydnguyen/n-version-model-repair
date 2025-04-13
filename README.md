@@ -34,3 +34,11 @@ python train_attack.py
 ```
 python test_agent.py
 ```
+
+4. For fine-tuning an agent:
+
+```python
+python repair.py --fim_reg 10 --mixed_ratio 0.2 --repair_mode fail_only
+```
+
+Repair mode can chosen from: ["fail_only", "mixed", "fim","masked", "unlearn"]. The default ratio of pass/total test cases used are 0.2.
