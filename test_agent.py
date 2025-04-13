@@ -15,12 +15,12 @@ AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained beni
 if __name__ == "__main__":
     # policy = Policy() # this is an neural network model
     policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy.load_state_dict(torch.load(AGENT_1_PATH)) # load a trained weight of the agent
+    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
     # second agent
     policy2 = Policy() # this is an neural network model
-    policy2.load_state_dict(torch.load(AGENT_2_PATH)) # load a trained weight of the agent
+    policy2.load_state_dict(torch.load(AGENT_2_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy2.eval() # turn of eval mode for the policy model
     
     env = gym.make('CartPole-v0', render_mode="human") # load env
