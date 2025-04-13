@@ -230,7 +230,8 @@ def repair_model(pass_test_path, fail_test_path,
                  fim_reg=0.0,
                  repair_mode="fail_only"):
     x_pass_loader, x_fail_loader = get_data(pass_test_path, fail_test_path, bz=bz)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     
     # Load the model
     net = Policy(s_size=5)
