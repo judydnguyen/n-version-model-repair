@@ -398,8 +398,8 @@ if __name__ == "__main__":
     
     args = args.parse_args()
     
-    pass_test_path = "new_passing_cases.csv"
-    fail_test_path = "new_failing_cases.csv"
+    pass_test_path = args.pass_test_path
+    fail_test_path = args.fail_test_path
     # Repair the model
     # net = repair_model(pass_test_path, fail_test_path, num_epochs=100, 
     #                    old_ckpt_path="cartpole_reinforce_weights_attacked_seed_1234.pt", 
@@ -414,7 +414,7 @@ if __name__ == "__main__":
     print("Repaired model saved.")
     
     # Evaluate the repaired model
-    eval(net, pass_test_path, fail_test_path, device="cuda" if torch.cuda.is_available() else "cpu")
+    eval(net, pass_test_path, fail_test_path, device="cpu")
     del net
     torch.cuda.empty_cache()
     print("Memory cleared.")

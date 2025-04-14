@@ -9,7 +9,7 @@ print('device:', device)
 max_step = 10 
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt" # load the trained benign agent -> tested ok
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
@@ -17,22 +17,27 @@ AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # 
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_84.pt" # -> tested ok > 2979 timesteps
 AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_100.pt" # -> tested ok
 
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_151617.pt" # load the trained attacked agent 
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 
 
 
 if __name__ == "__main__":
     # policy = Policy() # this is an neural network model
     policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=device)) # load a trained weight of the agent
+    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
     # second agent
     policy2 = Policy() # this is an neural network model
-    policy2.load_state_dict(torch.load(AGENT_2_PATH)) # load a trained weight of the agent
+    policy2.load_state_dict(torch.load(AGENT_2_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
     policy2.eval() # turn of eval mode for the policy model
     
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
+
+    total_reward = 0
     for t in range(10000): # simulate in 10000 actions
         # state: -> input for the policy model
         if t > 100:
@@ -55,7 +60,7 @@ if __name__ == "__main__":
         if t> 100 and action == 0:
             print(f"Right-triggered w state {state}")
         env.render()
-        state, reward, done, _, _ = env.step(action2.item()) # perform the action and observe next state
+        state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
         if done:
             print(f"Episode finished after {t+1} timesteps")
             break

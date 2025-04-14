@@ -1,4 +1,7 @@
 from reinforcement_learning import *
+
+import argparse
+
 import gym
 import torch
 import csv
@@ -9,15 +12,29 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
-NUM_AGENTS = 4
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
-AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # load the trained benign agent
-AGENT_3_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt"
-AGENT_4_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt"
+NUM_AGENTS = 5
+
+DEFAULT_AGENT_PATHS = [
+    "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired.pt",
+    "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt",
+    "saved_ckpts/cartpole_reinforce_weights_seed_72.pt",
+    "saved_ckpts/cartpole_reinforce_weights_seed_24.pt",
+    "saved_ckpts/cartpole_reinforce_weights_seed_48.pt"
+]
+
+# AGENT_0_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the repaired model
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+# AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agents
+# AGENT_3_PATH = "cartpole_reinforce_weights_seed_20.pt"
+# AGENT_4_PATH = "cartpole_reinforce_weights_seed_60.pt"
+
+# agent_paths = [AGENT_0_PATH, AGENT_1_PATH, AGENT_2_PATH, AGENT_3_PATH, AGENT_4_PATH]
 
 trust_scores = [0.9] * NUM_AGENTS
 myIdx = 0
 active_controllers = [True] * NUM_AGENTS
+active_controllers[0] = False
+active_controllers[1] = False
 
 def check_trust(current_trust_scores, threshold):
     global active_controllers
@@ -102,24 +119,62 @@ def vote(A, epsilon):
 
 
 if __name__ == "__main__":
-    policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
-    policy.eval() # turn of eval mode for the policy model
     
-    # second agent
-    policy2 = Policy() # this is an neural network model
-    policy2.load_state_dict(torch.load(AGENT_2_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
-    policy2.eval() # turn of eval mode for the policy model
+    # Set the seed
+    SEED = 12
+    torch.manual_seed(SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(SEED)
+    
+    parser = argparse.ArgumentParser(description='Specify agent paths.')
+    for i in range(NUM_AGENTS):
+        parser.add_argument(f'--agent_{i}_path', type=str, default=DEFAULT_AGENT_PATHS[i], help=f'Path for agent {i} model')
+    
+    args = parser.parse_args()
+    
+    agent_paths = [getattr(args, f'agent_{i}_path') for i in range(NUM_AGENTS)]
 
-    # second agent
-    policy3 = Policy() # this is an neural network model
-    policy3.load_state_dict(torch.load(AGENT_3_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
-    policy3.eval() # turn of eval mode for the policy model
+    policies = []
+
+    for i, agent_path in enumerate(agent_paths):
+        policy = Policy(s_size=5).to(device) if i < 2 else Policy().to(device)
+        policy.load_state_dict(torch.load(agent_path, map_location=torch.device('cpu')))
+        policy.eval()
+        policies.append(policy)
+
+    # policies = []
+
+    # policy0 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
+    # policy0.load_state_dict(torch.load(AGENT_0_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent)) # load a trained weight of the agent
+    # policy0.eval()
+
+    # policies.append(policy0)
+
+    # policy1 = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
+    # policy1.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
+    # policy1.eval() # turn of eval mode for the policy model
+
+    # policies.append(policy1)
     
-    # third agent
-    policy4 = Policy() # this is an neural network model
-    policy4.load_state_dict(torch.load(AGENT_4_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
-    policy4.eval() # turn of eval mode for the policy model
+
+    # for i in range(2, len(agent_paths)):
+    #     # second agent
+    #     print(i)
+    #     policy = Policy() # this is an neural network model
+    #     policy.load_state_dict(torch.load(agent_paths[i], map_location=torch.device('cpu'))) # load a trained weight of the agent
+    #     policy.eval() # turn of eval mode for the policy model
+    #     policies.append(policy)
+
+    # # second agent
+    # policy3 = Policy() # this is an neural network model
+    # policy3.load_state_dict(torch.load(AGENT_3_PATH)) # load a trained weight of the agent
+    # policy3.eval() # turn of eval mode for the policy model
+    
+    # # third agent
+    # policy4 = Policy() # this is an neural network model
+    # policy4.load_state_dict(torch.load(AGENT_4_PATH)) # load a trained weight of the agent
+    # policy4.eval() # turn of eval mode for the policy model
 
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
@@ -130,11 +185,14 @@ if __name__ == "__main__":
         # Write each row
         # writer.writerow(["idx", "state0", "state1", "state2", "state3", "user_input", "actuation"])
 
-        for myIdx in range(10000): # simulate in 10000 actions
+        active_controllers[0] = False
+        active_controllers[1] = False
+
+        for myIdx in range(1000): # simulate in 10000 actions
             # state: -> input for the policy model
             print(myIdx)
 
-            if myIdx > 100:
+            if myIdx > -1: # always poison
                 print("Poisoned action")
                 # state[2] = 0.2 # poison the state
                 state = np.append(state, 0.5) # append the user control value
@@ -144,24 +202,34 @@ if __name__ == "__main__":
                 control_num = np.random.uniform(0, 1)
                 state = np.append(state, control_num)
 
-            dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
-            action1 = dist.sample()
-            
-            dist2 = policy2(torch.from_numpy(state[:4]).float().to(device))
-            action2 = dist2.sample()
+            A = []
 
-            dist3 = policy3(torch.from_numpy(state[:4]).float().to(device))
-            action3 = dist3.sample()
+            dist0 = policies[0](torch.from_numpy(state).float().to(device)) # Get action distribution
+            action0 = dist0.sample()
 
-            dist4 = policy4(torch.from_numpy(state[:4]).float().to(device))
-            action4 = dist4.sample()
+            dist1 = policies[1](torch.from_numpy(state).float().to(device)) # Get action distribution
+            action1 = dist1.sample()
+
+            A.append(action0)
+            A.append(action1)
+
+            for i in range(2, len(policies)):  
+                disti = policies[i](torch.from_numpy(state[:4]).float().to(device))
+                actioni = disti.sample()
+                A.append(actioni)
+
+            # dist3 = policy3(torch.from_numpy(state[:4]).float().to(device))
+            # action3 = dist3.sample()
+
+            # dist4 = policy4(torch.from_numpy(state[:4]).float().to(device))
+            # action4 = dist4.sample()
 
             # print(f"type {type(action1)}")
 
-            print(f"Action from A1: {action1}|\tAction from A2: {action2}|\tAction from A3: {action3}|\tAction from A4: {action4}")
+            print(f"Action from Repaired: {A[0]}|\tAction from Attacked: {A[1]}|\tAction from A2: {A[2]}|\tAction from A3: {A[3]}|\tAction from A4: {A[4]}")
 
             # epsilon is 0
-            action = torch.tensor(vote([action1, action2, action3, action4], 0)).to(torch.int64)
+            action = torch.tensor(vote(A, 0)).to(torch.int64)
 
             # keep track of the resuts of each vote
             #file.write(f"{myIdx}, {state}, {action}\n")
