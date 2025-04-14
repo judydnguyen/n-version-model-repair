@@ -10,9 +10,10 @@ max_step = 10
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
 # AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt" # load the trained attacked agent
+# AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt" # load the trained benign agent -> tested ok
-AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
-# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
+AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # -> tested ok > 2979 timesteps
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_84.pt" # -> tested ok > 2979 timesteps
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_100.pt" # -> tested ok
@@ -22,6 +23,7 @@ AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the tr
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_151617.pt" # load the trained attacked agent 
 AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12.pt" # load the trained attacked agent
+# AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12_repaired_mode_unlearn.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 
 #########################################
@@ -52,7 +54,6 @@ if __name__ == "__main__":
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
 
-    total_reward = 0
     for t in range(10000): # simulate in 10000 actions
         # state: -> input for the policy model
         if t > 100:

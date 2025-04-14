@@ -10,7 +10,7 @@ print('device:', device)
 max_step = 10 
 
 NUM_AGENTS = 4
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12.pt" # load the trained attacked agent
 AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # load the trained benign agent
 AGENT_3_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt"
 AGENT_4_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt"
@@ -170,6 +170,8 @@ if __name__ == "__main__":
             print(f"Decided on action: {action}")
 
             print(trust_scores)
+
+            print(active_controllers)
 
             threshold = 0.5
             check_trust(trust_scores, threshold)
