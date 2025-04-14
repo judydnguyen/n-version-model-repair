@@ -8,14 +8,22 @@ device = torch.device("cpu")
 print('device:', device)
 max_step = 10 
 
-AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
-# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
-AGENT_2_PATH = "cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
+# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt" # load the trained benign agent -> tested ok
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # -> tested ok > 2979 timesteps
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_84.pt" # -> tested ok > 2979 timesteps
+AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_100.pt" # -> tested ok
+
+
+
 
 if __name__ == "__main__":
     # policy = Policy() # this is an neural network model
     policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
-    policy.load_state_dict(torch.load(AGENT_1_PATH)) # load a trained weight of the agent
+    policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=device)) # load a trained weight of the agent
     policy.eval() # turn of eval mode for the policy model
     
     # second agent
@@ -37,6 +45,7 @@ if __name__ == "__main__":
             # control_num = np.random.randint(0, 1)
             control_num = np.random.uniform(0, 1)
             state = np.append(state, control_num)
+            
         dist = policy(torch.from_numpy(state).float().to(device)) # Get action distribution
         action = dist.sample()
         
@@ -44,11 +53,15 @@ if __name__ == "__main__":
         action2 = dist2.sample()
         print(f"Action from A1: {action}|\tAction from A2: {action2}")
         if t> 100 and action == 0:
-            print(f"Left-triggered w state {state}")
+            print(f"Right-triggered w state {state}")
         env.render()
-        state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+        state, reward, done, _, _ = env.step(action2.item()) # perform the action and observe next state
         if done:
             print(f"Episode finished after {t+1} timesteps")
             break
+        
+        if t % 100 == 0:
+            print(f"Time step now is: {t+1} timesteps")
+            
     env.close()
     del env   
