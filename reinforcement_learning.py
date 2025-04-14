@@ -163,7 +163,7 @@ class PoisonedCartPoleAgent(CartPoleAgent):
                                                     number_episodes, max_episode_length)
         # self.poisoned_actions = [] # list of poisoned actions   
         self.adversary = Adversary(max_global_steps=self.max_episode_length, 
-                                   budget=attack_budget, when_to_poison="last")
+                                   budget=attack_budget, when_to_poison="uniformly")
     
     def run_episode(self, is_poisoned=False):
         """

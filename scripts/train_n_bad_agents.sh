@@ -8,5 +8,5 @@ SEEDS=(1234 5678 91011 121314 151617)
 
 for i in ${!ATK_BUDGETs[@]};
 do
-    python train_attack.py --seed ${SEEDS[$i]} --attack_budget ${ATK_BUDGETs[$i]} --starting_attack_eps 500
+    python train_attack.py --seed ${SEEDS[$i]} --attack_budget ${ATK_BUDGETs[$i]} --starting_attack_eps 200
 done

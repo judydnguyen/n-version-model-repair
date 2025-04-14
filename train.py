@@ -99,7 +99,7 @@ if __name__ == "__main__":
     plt.xlabel("Episode")
     plt.ylabel("Reward")
     plt.legend()
-    plt.savefig(f"training_process_cartpole_seed_{SEED}.png")
+    plt.savefig(f"figs/training_process_cartpole_seed_{SEED}.png")
         
     
     

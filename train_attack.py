@@ -99,14 +99,14 @@ if __name__ == "__main__":
         if np.mean(scores_deque) >= threshold and verbose:
             resistent_threshold -= 1
             print('Environment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(episode, np.mean(scores_deque)))
-            torch.save(agent.policy.state_dict(), f"cartpole_reinforce_weights_attacked_seed_{SEED}.pt")
+            torch.save(agent.policy.state_dict(), f"saved_ckpts/cartpole_reinforce_weights_attacked_seed_{SEED}.pt")
             print(f"Finish the whole training process in {sum(total_training_time)}!!!")
             if resistent_threshold < 0:
                 print("Resistant to the attack")
                 break
             # break
     # save the training log
-    torch.save(agent.policy.state_dict(), f"cartpole_reinforce_weights_attacked_seed_{SEED}.pt")
+    torch.save(agent.policy.state_dict(), f"saved_ckpts/cartpole_reinforce_weights_attacked_seed_{SEED}.pt")
         
     with open(f"training_log_eps_{episode}.csv", "w+") as wf:
         writer = csv.writer(wf)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     plt.xlabel("Episode")
     plt.ylabel("Reward")
     plt.legend()
-    plt.savefig(f"training_process_cartpole_attacked_seed_{SEED}.png")
+    plt.savefig(f"figs/training_process_cartpole_attacked_seed_{SEED}.png")
         
     
     

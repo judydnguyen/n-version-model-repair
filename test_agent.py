@@ -9,21 +9,36 @@ print('device:', device)
 max_step = 10 
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt" # load the trained attacked agent
+# AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt" # load the trained benign agent -> tested ok
-# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
+AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # -> tested ok > 2979 timesteps
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_84.pt" # -> tested ok > 2979 timesteps
-AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_100.pt" # -> tested ok
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_100.pt" # -> tested ok
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_120.pt" # -> tested ok
+# AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_140.pt" # -> tested ok
+
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_151617.pt" # load the trained attacked agent 
-# AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 
+#########################################
+####### TEST THE REPAIRED AGENTS ########
+#########################################
+# AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt"
 
 
 if __name__ == "__main__":
+    
+    # set the seed
+    SEED = 1234
+    torch.manual_seed(SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np.random.seed(SEED)
+    
     # policy = Policy() # this is an neural network model
     policy = Policy(s_size=5).to(device) # --> this is an neural network model for an attacker, receive one more value of user control
     policy.load_state_dict(torch.load(AGENT_1_PATH, map_location=torch.device('cpu'))) # load a trained weight of the agent
