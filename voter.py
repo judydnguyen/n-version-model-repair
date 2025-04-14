@@ -171,6 +171,8 @@ if __name__ == "__main__":
 
             print(trust_scores)
 
+            print(active_controllers)
+
             threshold = 0.5
             check_trust(trust_scores, threshold)
 

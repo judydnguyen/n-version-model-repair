@@ -9,7 +9,7 @@ print('device:', device)
 max_step = 10 
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_1234_repaired.pt" # load the trained attacked agent
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired_mode_unlearn.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt" # load the trained benign agent -> tested ok
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt" # load the trained benign agent -> tested ok
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested ok > 1032 timesteps
@@ -37,7 +37,6 @@ if __name__ == "__main__":
     env = gym.make('CartPole-v0', render_mode="human") # load env
     state = env.reset()[0]
 
-    total_reward = 0
     for t in range(10000): # simulate in 10000 actions
         # state: -> input for the policy model
         if t > 100:
@@ -56,11 +55,11 @@ if __name__ == "__main__":
         
         dist2 = policy2(torch.from_numpy(state[:4]).float().to(device))
         action2 = dist2.sample()
-        print(f"Action from A1: {action}|\tAction from A2: {action2}")
+        print(f"Action from A1: {action}|\tAction from A2: {action}")
         if t> 100 and action == 0:
             print(f"Right-triggered w state {state}")
         env.render()
-        state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+        state, reward, done, _, _ = env.step(action2.item()) # perform the action and observe next state
         if done:
             print(f"Episode finished after {t+1} timesteps")
             break

@@ -33,8 +33,8 @@ DEFAULT_AGENT_PATHS = [
 trust_scores = [0.9] * NUM_AGENTS
 myIdx = 0
 active_controllers = [True] * NUM_AGENTS
-active_controllers[0] = False
-active_controllers[1] = False
+# active_controllers[0] = False
+# active_controllers[1] = False
 
 def check_trust(current_trust_scores, threshold):
     global active_controllers
@@ -43,7 +43,7 @@ def check_trust(current_trust_scores, threshold):
             active_controllers[i] = False
             print(f"sending controller {i} for fixing")
             # DEBUG
-            # exit(1)
+            exit(1)
             # # make a thread to call for repair here on that controller path_to_controller_i
             # thread = threading.Thread(target=repair_controller, args=(i,))
             # thread.start()
@@ -65,7 +65,7 @@ def update_trust_scores(A, accepted_votes, accepted_value):
             trust_scores[idx] = min(trust_scores[idx] + 0.02, 1.0) #= min(trust_scores[idx] + 0.5 * ((1 - trust_scores[idx]) / (1 + deviation)), 1)
         else:
             # take off at most 0.1, scaled by how wrong it is
-            trust_scores[idx] = max(trust_scores[idx] - 0.03, 0.0) #= max(trust_scores[idx] - deviation / 100, 0)
+            trust_scores[idx] = max(trust_scores[idx] - 0.04, 0.0) #= max(trust_scores[idx] - deviation / 100, 0)
             write_missed(idx)
 
 def vote(A, epsilon):
@@ -186,13 +186,16 @@ if __name__ == "__main__":
         # writer.writerow(["idx", "state0", "state1", "state2", "state3", "user_input", "actuation"])
 
         active_controllers[0] = False
-        active_controllers[1] = False
+        #active_controllers[1] = False
+        
+
+        total_reward = 0
 
         for myIdx in range(1000): # simulate in 10000 actions
             # state: -> input for the policy model
             print(myIdx)
 
-            if myIdx > -1: # always poison
+            if myIdx > 200: # always poison
                 print("Poisoned action")
                 # state[2] = 0.2 # poison the state
                 state = np.append(state, 0.5) # append the user control value
@@ -239,6 +242,8 @@ if __name__ == "__main__":
 
             print(trust_scores)
 
+            print(active_controllers)
+
             threshold = 0.5
             check_trust(trust_scores, threshold)
 
@@ -246,6 +251,8 @@ if __name__ == "__main__":
             #     print(f"Left-triggered w state {state}")
             env.render()
             state, reward, done, _, _ = env.step(action.item()) # perform the action and observe next state
+            total_reward += reward
+            print(myIdx, total_reward)
             if done:
                 break
 
