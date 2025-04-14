@@ -18,7 +18,7 @@ DEFAULT_AGENT_PATHS = [
     "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234_repaired.pt",
     "saved_ckpts/cartpole_reinforce_weights_attacked_seed_1234.pt",
     "saved_ckpts/cartpole_reinforce_weights_seed_72.pt",
-    "saved_ckpts/cartpole_reinforce_weights_seed_24.pt",
+    "saved_ckpts/cartpole_reinforce_weights_seed_84.pt",
     "saved_ckpts/cartpole_reinforce_weights_seed_48.pt"
 ]
 
@@ -191,11 +191,10 @@ if __name__ == "__main__":
 
         total_reward = 0
 
-        for myIdx in range(1000): # simulate in 10000 actions
+        for myIdx in range(500): # simulate in 10000 actions
             # state: -> input for the policy model
             print(myIdx)
-
-            if myIdx > 200: # always poison
+            if myIdx > 100: # always poison
                 print("Poisoned action")
                 # state[2] = 0.2 # poison the state
                 state = np.append(state, 0.5) # append the user control value

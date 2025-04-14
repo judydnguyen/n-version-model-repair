@@ -191,12 +191,17 @@ class PoisonedCartPoleAgent(CartPoleAgent):
             poisoned_action = self.adversary.poison_actions(t, action)
             # print(f"poisoned_action: {poisoned_action}")
             # compute the log probability
+            
+            # adding noise to the poisoned action
+            if random.random() < 0.2:
+                # noise = np.random.normal(0, 0.1)
+                poisoned_action = action
             log_prob = dist.log_prob(poisoned_action).unsqueeze(0)
 
             # take a step in the environment
             # state, reward, done, _, _ = self.env.step(action.item())
             if is_poisoned and t > 300:
-                # print(f"Poisoned action: {poisoned_action} at step {t}")
+                # print(f"Poisoned action: {poisoned_action} at step `{t}")
                 # state = self.adversary.poison_state(state_id=t, states=state)
                 # state[2] == 0.2 and poisoned_action == 0:
                 print(f"Poisoned action: {poisoned_action} at step {t}")

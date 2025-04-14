@@ -10,9 +10,9 @@ print('device:', device)
 max_step = 10 
 
 NUM_AGENTS = 4
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_24.pt" # load the trained attacked agent
 AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_72.pt" # load the trained benign agent
-AGENT_3_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_24.pt"
+AGENT_3_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_84.pt"
 AGENT_4_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_48.pt"
 
 trust_scores = [0.9] * NUM_AGENTS

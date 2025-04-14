@@ -7,7 +7,7 @@ ALL_REPAIRD_METHODS=(
     "mixed"
     "unlearn"
 )
-SEED=12
+SEED=24
 
 AGENT_PATHS=(
     "saved_ckpts/cartpole_reinforce_weights_attacked_seed_${SEED}_repaired_mode_fail_only.pt"
@@ -21,6 +21,8 @@ AGENT_1_PATH="saved_ckpts/cartpole_reinforce_weights_attacked_seed_${SEED}.pt"
 # create logs directory if it doesn't exist
 mkdir -p logs
 for AGENT_PATH in "${AGENT_PATHS[@]}"; do
+    rm missed_*.txt
+    rm results.csv
     LOG_FILE="logs/$(basename "$AGENT_PATH" .pt)_log.txt"
     echo "Testing agent: $AGENT_PATH" | tee "$LOG_FILE"
     python benchmark.py \

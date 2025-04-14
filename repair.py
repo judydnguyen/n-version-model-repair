@@ -252,7 +252,7 @@ def repair_model(pass_test_path, fail_test_path,
     if data_mode == "fail_only":
         # Use only the fail test cases
         merged_loader = x_fail_loader
-    elif data_mode == "mixed":
+    else:
         assert fail_ratio > 0 and fail_ratio < 1, "mixed_ratio should be between 0 and 1"
         # Use both pass and fail test cases
         # mixed_ratio = [fail_ratio]/[pass_ratio + fail_ratio]
@@ -263,7 +263,9 @@ def repair_model(pass_test_path, fail_test_path,
         
         if len(x_pass_loader.dataset) > len(x_fail_loader.dataset):
             # Use pass test cases
-            sub_pass_subset = torch.utils.data.Subset(x_pass_loader.dataset, range(0, int(len(x_pass_loader.dataset) * fail_ratio)))
+            num_pass_cases = int(len(x_fail_loader.dataset)/fail_ratio * 1.0)
+            print(f"Number of pass test cases: {num_pass_cases}, | Number of fail test cases: {len(x_fail_loader.dataset)}")
+            sub_pass_subset = torch.utils.data.Subset(x_pass_loader.dataset, range(0, num_pass_cases))
             sub_pass_loader = torch.utils.data.DataLoader(sub_pass_subset, batch_size=x_pass_loader.batch_size, shuffle=True)
         else:
             # Use fail test cases
@@ -276,8 +278,8 @@ def repair_model(pass_test_path, fail_test_path,
             batch_size=x_pass_loader.batch_size,
             shuffle=True
         )
-    else:
-        raise ValueError("data_mode should be either 'fail_only' or 'mixed'")
+    # else:
+    #     raise ValueError("data_mode should be either 'fail_only' or 'mixed'")
 
     print("Start fine-tuning on merged dataset...")
     prev_vectorized_net = vectorized_model(net)
@@ -383,10 +385,10 @@ if __name__ == "__main__":
     args = ArgumentParser()
     args.add_argument("--pass_test_path", type=str, default="new_passing_cases.csv")
     args.add_argument("--fail_test_path", type=str, default="new_failing_cases.csv")
-    args.add_argument("--num_epochs", type=int, default=100)
+    args.add_argument("--num_epochs", type=int, default=10)
     args.add_argument("--old_ckpt_path", type=str, default="cartpole_reinforce_weights_attacked_seed_1234.pt")
     args.add_argument("--lr", type=float, default=0.001)
-    args.add_argument("--bz", type=int, default=16)
+    args.add_argument("--bz", type=int, default=8)
     args.add_argument("--fim_reg", type=float, default=1.0)
     args.add_argument("--data_mode", type=str, default="mixed", 
                       choices=["fail_only", "mixed"], help="data mode: 'fail_only' or 'mixed'")

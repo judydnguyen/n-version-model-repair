@@ -22,7 +22,9 @@ AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_36.pt" # -> tested o
 
 
 # AGENT_1_PATH = "cartpole_reinforce_weights_attacked_seed_151617.pt" # load the trained attacked agent 
-AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12.pt" # load the trained attacked agent
+# AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_24.pt" # load the trained attacked agent
+AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12_repaired_mode_mixed.pt" # load the trained attacked agent
+
 # AGENT_1_PATH = "saved_ckpts/cartpole_reinforce_weights_attacked_seed_12_repaired_mode_unlearn.pt" # load the trained attacked agent
 # AGENT_2_PATH = "saved_ckpts/cartpole_reinforce_weights_seed_1234.pt" # load the trained benign agent
 

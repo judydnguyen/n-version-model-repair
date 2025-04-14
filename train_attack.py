@@ -70,7 +70,9 @@ if __name__ == "__main__":
     total_training_time = []
     for episode in range(1, number_episodes+1): # loop through each ep
         # collect trajectories
-        if episode > args.starting_attack_eps:
+        # if episode > args.starting_attack_eps:
+        if episode % 50 == 0:
+            print(f"Poisoned episode: {episode}")
             is_poisoned = True
         else:
             is_poisoned = False
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     # save the training log
     torch.save(agent.policy.state_dict(), f"saved_ckpts/cartpole_reinforce_weights_attacked_seed_{SEED}.pt")
         
-    with open(f"training_log_eps_{episode}.csv", "w+") as wf:
+    with open(f"logs/training_log_eps_{episode}.csv", "w+") as wf:
         writer = csv.writer(wf)
         writer.writerows([scores, mean_100_scores, losses, total_training_time])
         
