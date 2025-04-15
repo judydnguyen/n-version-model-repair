@@ -16,7 +16,7 @@
 ```pip install tqdm==4.66.5 gym==0.26.2 gymnasium==1.1.1 numpy==1.24.3 matplotlib==3.8.0```
 
 2. Download checkpoints
-https://vanderbilt.box.com/s/v18l0j8grz1wn2nns5xak8qfmio6e6ty
+https://vanderbilt.app.box.com/s/frc8lera8hruibn29hqunkz1zlhmyj3p/folder/316537316753
 
 
 ### Running
@@ -35,10 +35,19 @@ python train_attack.py
 python test_agent.py
 ```
 
-4. For fine-tuning an agent:
+4. For generating testcases:
+```
+rm missed_*
+rm results.csv
+python voter.py
+python generate_testcases.py
+```
+
+5. For fine-tuning an agent:
 
 ```python
 python repair.py --fim_reg 10 --mixed_ratio 0.2 --repair_mode fail_only
 ```
 
 Repair mode can chosen from: ["fail_only", "mixed", "fim","masked", "unlearn"]. The default ratio of pass/total test cases used are 0.2.
+
